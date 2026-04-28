@@ -1,0 +1,280 @@
+<!-- TODO: 
+  1.Responive layout
+  2.Improve the code quality -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Frontend Mentor | Weather app</title>
+
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="../assets/images/favicon-32x32.png"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <header class="header-container">
+      <nav class="header-nav">
+        <img src="../assets/images/logo.svg" alt="logo" id="logo" />
+        <div class="filterBtn-container">
+          <button class="btn" id="dropDownBtn">
+            <img src="../assets/images/icon-units.svg" alt="gear icon" />
+            <span class="filterBtnText">Units</span>
+            <img src="../assets/images/icon-dropdown.svg" alt="dropdown icon" />
+          </button>
+          <div class="filter hide" id="filter">
+            <button class="filter-btn" id="imperialBtn">
+              Switch to Imperial
+            </button>
+            <button class="filter-btn hide" id="metricBtn">
+              Switch to Metric
+            </button>
+            <ul class="filterList">
+              <h4>Temperature</h4>
+              <li id="celFiltr">
+                <span>Celsius(°C)</span
+                ><img
+                  src="../assets/images/icon-checkmark.svg"
+                  alt="checkmark"
+                />
+              </li>
+              <li id="fahFilter">
+                <span>Fahrenheit(°F)</span
+                ><img
+                  src="../assets/images/icon-checkmark.svg"
+                  alt="checkmark"
+                  class="hide"
+                />
+              </li>
+            </ul>
+            <hr />
+            <ul class="filterList">
+              <h4>Wind Speed</h4>
+              <li id="wspeedkm">
+                <span>km/h</span
+                ><img
+                  src="../assets/images/icon-checkmark.svg"
+                  alt="checkmark"
+                />
+              </li>
+              <li id="wspeedmp">
+                <span>mph</span
+                ><img
+                  src="../assets/images/icon-checkmark.svg"
+                  alt="checkmark"
+                  class="hide"
+                />
+              </li>
+            </ul>
+            <hr />
+            <ul class="filterList">
+              <h4>Precipitation</h4>
+              <li id="precimm">
+                <span>Millimeters(mm)</span
+                ><img
+                  src="../assets/images/icon-checkmark.svg"
+                  alt="checkmark"
+                />
+              </li>
+              <li id="preciin">
+                <span>Inches(in)</span
+                ><img
+                  src="../assets/images/icon-checkmark.svg"
+                  alt="checkmark"
+                  class="hide"
+                />
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <main>
+      <section id="error-state" class="error-state font-bri hide">
+        <img
+          src="../assets//images/icon-error.svg"
+          alt="error icon"
+          class="error-icon"
+        />
+        <h1 class="title">Something went wrong</h1>
+        <p class="error-state-text">
+          We couldn't connect to the server(API error). Please try again in a
+          few moments.
+        </p>
+        <button id="retry-btn" class="btn retryBtn">
+          <img src="../assets/images/icon-retry.svg" alt="retry icon" />
+          <span id="retryText">Retry</span>
+        </button>
+      </section>
+      <section id="home-state" class="home-state">
+        <div class="home-state__top">
+          <h1 class="title">How's the sky looking today?</h1>
+          <div class="home-state__search-container">
+            <div class="searchbar-bg">
+              <img
+                src="../assets/images/icon-search.svg"
+                alt="search icon"
+                id="mag"
+              />
+              <input
+                type="text"
+                placeholder="Search for a place..."
+                id="citySearch"
+                autocomplete="off"
+              />
+              <ul class="suggestionsList" id="suggestionsList">
+                <li class="loadSugg">
+                  <img
+                    src="../assets/images/icon-loading.svg"
+                    alt="loading icon"
+                  />
+                  Search in progress!
+                </li>
+              </ul>
+            </div>
+            <button id="search-btn" class="search-btn">Search</button>
+          </div>
+        </div>
+
+        <div class="home-state__bot">
+          <div class="left-col">
+            <div class="city-wheater-display" id="city-wheater-display">
+              <div class="city-weather-container" id="city-weather-container">
+                <div class="city-weather-details">
+                  <h2 class="city-name">
+                    <span id="city"></span><span id="country"></span>
+                  </h2>
+                  <p class="dateinfo" id="dateinfo"></p>
+                </div>
+                <div class="weather-img-degree" id="weather-img-degree">
+                  <p class="degree"><i id="deg-num"></i></p>
+                </div>
+              </div>
+              <div class="loading-display hide" id="loading-display">
+                <img
+                  src="../assets/images/icon-loading.svg"
+                  alt="loading icon"
+                  class="loading-img"
+                />
+                <p>Loading...</p>
+              </div>
+            </div>
+            <div class="status-cards">
+              <div class="status-card">
+                <p>Feels Like</p>
+                <p><span id="feels" class="status-data"></span></p>
+              </div>
+              <div class="status-card">
+                <p>Humidity</p>
+                <p><span id="humidity" class="status-data"></span></p>
+              </div>
+              <div class="status-card">
+                <p>Wind</p>
+                <p><span id="wind" class="status-data"></span></p>
+              </div>
+              <div class="status-card">
+                <p>Precipitation</p>
+                <p><span id="precipitation" class="status-data"></span></p>
+              </div>
+            </div>
+            <div class="forecast">
+              <h3>Daily forcast</h3>
+              <div class="forcast-grid">
+                <div class="forcast-card">
+                  <h4></h4>
+                  <div class="degrees">
+                    <p><span class="max-deg"></span></p>
+                    <p><span class="min-deg"></span></p>
+                  </div>
+                </div>
+                <div class="forcast-card">
+                  <h4></h4>
+                  <div class="degrees">
+                    <p><span class="max-deg"></span></p>
+                    <p><span class="min-deg"></span></p>
+                  </div>
+                </div>
+                <div class="forcast-card">
+                  <h4></h4>
+                  <div class="degrees">
+                    <p><span class="max-deg"></span></p>
+                    <p><span class="min-deg"></span></p>
+                  </div>
+                </div>
+                <div class="forcast-card">
+                  <h4></h4>
+                  <div class="degrees">
+                    <p><span class="max-deg"></span></p>
+                    <p><span class="min-deg"></span></p>
+                  </div>
+                </div>
+                <div class="forcast-card">
+                  <h4></h4>
+                  <div class="degrees">
+                    <p><span class="max-deg"></span></p>
+                    <p><span class="min-deg"></span></p>
+                  </div>
+                </div>
+                <div class="forcast-card">
+                  <h4></h4>
+                  <div class="degrees">
+                    <p><span class="max-deg"></span></p>
+                    <p><span class="min-deg"></span></p>
+                  </div>
+                </div>
+                <div class="forcast-card">
+                  <h4></h4>
+                  <div class="degrees">
+                    <p><span class="max-deg"></span></p>
+                    <p><span class="min-deg"></span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="right-col">
+            <div class="dropdown-weeks">
+              <h3>Hourly Forcast</h3>
+              <div class="weekFilter__container" id="weekFilter__container">
+                <button class="dropdownWeeks">
+                  <span id="weekday" class="weekday">Wednesday</span>
+                  <img
+                    src="../assets/images/icon-dropdown.svg"
+                    alt="dropdown"
+                  />
+                </button>
+                <div class="weekList__container">
+                  <ul class="weekList hide" id="weekList"></ul>
+                </div>
+              </div>
+            </div>
+            <div class="vertical-cards" id="vertical-cards"></div>
+          </div>
+        </div>
+
+        <div class="noFound">
+          <h2>No search result found!</h2>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
