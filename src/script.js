@@ -38,7 +38,7 @@ const weekList = document.getElementById("weekList");
 const weekday = document.getElementById("weekday");
 
 const LOCATION_CACHE_KEY = "userLocationCache";
-const CACHE_EXPIRY_MS = 360 * 60 * 1000; // 6 ore
+const CACHE_EXPIRY_MS = 360 * 60 * 1000;
 
 let impMetricSwitch = false;
 let tempSwitch = false;
@@ -59,11 +59,27 @@ let weatherDataCache = {
   precipitation: null,
 };
 
-async function searchCityCoordinates(name) {
+function startLoading() {
   displayState();
   forcstState();
   statusDataLoading();
   hourlyLoadingState(true);
+}
+
+function stopLoading() {
+  currentWeatherDate(
+    weatherDataCache.feels,
+    weatherDataCache.humidity,
+    weatherDataCache.wind,
+    weatherDataCache.precipitation,
+  );
+  displayState();
+  forcstState();
+  hourlyLoadingState(false);
+}
+
+async function searchCityCoordinates(name) {
+  startLoading();
 
   try {
     const response = await fetch(
@@ -87,15 +103,7 @@ async function searchCityCoordinates(name) {
   } catch (e) {
     console.log("Error:" + e);
   } finally {
-    currentWeatherDate(
-      weatherDataCache.feels,
-      weatherDataCache.humidity,
-      weatherDataCache.wind,
-      weatherDataCache.precipitation,
-    );
-    displayState();
-    forcstState();
-    hourlyLoadingState(false);
+    stopLoading();
   }
 }
 
@@ -119,10 +127,7 @@ async function weatherInfo(
   }
 
   if (isFiltered || isWeekDayFiltered) {
-    displayState();
-    forcstState();
-    statusDataLoading();
-    hourlyLoadingState(true);
+    startLoading();
   }
 
   let tempUnitsSwitch = tempSwitch ? `&temperature_unit=fahrenheit` : ``;
@@ -196,16 +201,8 @@ async function weatherInfo(
   } catch (e) {
     console.log("Error:" + e);
   } finally {
-    currentWeatherDate(
-      weatherDataCache.feels,
-      weatherDataCache.humidity,
-      weatherDataCache.wind,
-      weatherDataCache.precipitation,
-    );
     if (isFiltered || isWeekDayFiltered) {
-      displayState();
-      forcstState();
-      hourlyLoadingState(false);
+      stopLoading();
     }
   }
 }
@@ -242,10 +239,7 @@ async function suggetionCitiesSearch(inputCityName) {
 }
 
 async function searchCityByCoords(lat, lon, name, country) {
-  displayState();
-  forcstState();
-  statusDataLoading();
-  hourlyLoadingState(true);
+  startLoading();
   hideSuggestions();
 
   homeStateBottom.classList.remove("hide");
@@ -257,15 +251,7 @@ async function searchCityByCoords(lat, lon, name, country) {
   } catch (e) {
     console.log("Error:" + e);
   } finally {
-    currentWeatherDate(
-      weatherDataCache.feels,
-      weatherDataCache.humidity,
-      weatherDataCache.wind,
-      weatherDataCache.precipitation,
-    );
-    displayState();
-    forcstState();
-    hourlyLoadingState(false);
+    stopLoading();
   }
 }
 
@@ -289,6 +275,16 @@ async function getLocationAndFetch() {
       }, 2000);
       return;
     }
+  }
+
+  function resetRetryBtn() {
+    retryBtn.disabled = false;
+    retryText.textContent = "Retry";
+  }
+
+  function gestisciInterfacciaErrore() {
+    errorFetch.classList.remove("hide");
+    correctFetch.classList.add("hide");
   }
 
   const success = async (position) => {
@@ -325,22 +321,15 @@ async function getLocationAndFetch() {
       console.error("Errore durante la fetch:", error.message);
       gestisciInterfacciaErrore();
     } finally {
-      retryBtn.disabled = false;
-      retryText.textContent = "Retry";
+      resetRetryBtn();
     }
   };
 
   const error = (err) => {
     console.error("Errore Geolocalizzazione:", err.message);
     gestisciInterfacciaErrore();
-    retryBtn.disabled = false;
-    retryText.textContent = "Retry";
+    resetRetryBtn();
   };
-
-  function gestisciInterfacciaErrore() {
-    errorFetch.classList.remove("hide");
-    correctFetch.classList.add("hide");
-  }
 
   navigator.geolocation.getCurrentPosition(success, error);
 }
@@ -370,22 +359,12 @@ function suggestionCities(cities) {
 }
 
 function suggestionLoadingState() {
-  suggestionList.innerHTML = "";
   suggestionList.style.display = "block";
-
-  const li = document.createElement("li");
-  li.classList.add("loadSugg");
-
-  const img = document.createElement("img");
-  img.src = "../assets/images/icon-loading.svg";
-  img.alt = "loading icon";
-
-  const span = document.createElement("span");
-  span.textContent = "Searching in progress...";
-
-  li.appendChild(img);
-  li.appendChild(span);
-  suggestionList.appendChild(li);
+  suggestionList.innerHTML = `
+    <li class="loadSugg">
+      <img src="../assets/images/icon-loading.svg" alt="loading icon">
+      <span>Searching in progress...</span>
+    </li>`;
 }
 
 function convertDate(date) {
@@ -423,54 +402,56 @@ function weatherImgTemp(weatherCode, degree, isDay) {
 }
 
 function weatherCodeConv(weatherCode, isDay = true) {
-  let clearSky = isDay
-    ? "../assets/images/icon-sunny.webp"
-    : "../assets/images/icon-moon.webp";
+  const CODE_TO_ICON = {
+    0: "clear",
+    1: "partly",
+    2: "partly",
+    3: "overcast",
+    45: "fog",
+    48: "fog",
+    51: "drizzle",
+    53: "drizzle",
+    55: "drizzle",
+    56: "drizzle",
+    57: "drizzle",
+    61: "rain",
+    63: "rain",
+    65: "rain",
+    66: "rain",
+    67: "rain",
+    71: "snow",
+    73: "snow",
+    75: "snow",
+    77: "snow",
+    80: "rain",
+    81: "rain",
+    82: "rain",
+    85: "snow",
+    86: "snow",
+    95: "storm",
+    96: "storm",
+    99: "storm",
+  };
 
-  let mainlyClear = isDay
-    ? "../assets/images/icon-partly-cloudy.webp"
-    : "../assets/images/icon-partly-cloud-night.webp";
+  const ICON_PATH = {
+    clear: isDay
+      ? "../assets/images/icon-sunny.webp"
+      : "../assets/images/icon-moon.webp",
+    partly: isDay
+      ? "../assets/images/icon-partly-cloudy.webp"
+      : "../assets/images/icon-partly-cloud-night.webp",
+    overcast: "../assets/images/icon-overcast.webp",
+    fog: "../assets/images/icon-fog.webp",
+    drizzle: "../assets/images/icon-drizzle.webp",
+    rain: "../assets/images/icon-rain.webp",
+    snow: "../assets/images/icon-snow.webp",
+    storm: "../assets/images/icon-storm.webp",
+  };
 
-  switch (weatherCode) {
-    case 0:
-      return clearSky;
-    case 1:
-    case 2:
-      return mainlyClear;
-    case 3:
-      return "../assets/images/icon-overcast.webp";
-    case 45:
-    case 48:
-      return "../assets/images/icon-fog.webp";
-    case 51:
-    case 53:
-    case 55:
-    case 56:
-    case 57:
-      return "../assets/images/icon-drizzle.webp";
-    case 61:
-    case 63:
-    case 65:
-    case 66:
-    case 67:
-    case 80:
-    case 81:
-    case 82:
-      return "../assets/images/icon-rain.webp";
-    case 71:
-    case 73:
-    case 75:
-    case 77:
-    case 85:
-    case 86:
-      return "../assets/images/icon-snow.webp";
-    case 95:
-    case 96:
-    case 99:
-      return "../assets/images/icon-storm.webp";
-    default:
-      return "../assets/images/icon-overcast.webp";
-  }
+  return (
+    ICON_PATH[CODE_TO_ICON[weatherCode]] ??
+    "../assets/images/icon-overcast.webp"
+  );
 }
 
 function currentWeatherDate(feel, hum, wind, pre) {
@@ -519,49 +500,35 @@ function dailyData(weeks, weatherCode, tempMax, tempMin) {
 }
 
 function hourlyData(hoursArr, weatherCodeArr, weatherDegArr, isDay) {
-  const newHoursArr = hoursArr.map((h) => {
-    const hour = new Date(h);
-    return hour.getHours();
-  });
+  const newHoursArr = hoursArr.map((h) => new Date(h).getHours());
 
   const currentHour = new Date().getHours();
   const currentIndex = newHoursArr.findIndex((h) => h === currentHour);
 
   const existingCards = hourlyCardsCont.querySelectorAll(".wheater-hours");
 
-  if (existingCards.length > 0) {
-    for (let i = currentIndex, c = 0; c < 12; i++, c++) {
-      const card = existingCards[c];
+  for (let slot = 0; slot < 12; slot++) {
+    const i = currentIndex + slot;
 
-      card.querySelector(".front-part img").src = weatherCodeConv(
-        weatherCodeArr[i],
-        isDay[i],
-      );
-      card.querySelector(".front-part p").textContent = newHoursArr[i] + ":00";
-      card.lastElementChild.textContent = weatherDegArr[i] + "°";
-    }
-  } else {
-    for (let i = currentIndex; i < currentIndex + 12; i++) {
-      const card = document.createElement("div");
+    let card = existingCards[slot];
+    if (!card) {
+      card = document.createElement("div");
       card.classList.add("wheater-hours");
-      const hourWeather = document.createElement("div");
-      hourWeather.classList.add("front-part");
-      const img = document.createElement("img");
-      img.src = weatherCodeConv(weatherCodeArr[i], isDay[i]);
-      img.alt = "weather icon";
-      img.classList.add("img-hour");
-      hourWeather.appendChild(img);
-      const hour = document.createElement("p");
-      hour.textContent = newHoursArr[i] + ":00";
-      hourWeather.appendChild(hour);
-      card.appendChild(hourWeather);
-
-      const p = document.createElement("p");
-      p.textContent = weatherDegArr[i] + "°";
-      card.appendChild(p);
-
+      card.innerHTML = `
+        <div class="front-part">
+          <img src="" alt="weather icon" class="img-hour">
+          <p></p>
+        </div>
+        <p></p>`;
       hourlyCardsCont.appendChild(card);
     }
+
+    card.querySelector(".front-part img").src = weatherCodeConv(
+      weatherCodeArr[i],
+      isDay[i],
+    );
+    card.querySelector(".front-part p").textContent = newHoursArr[i] + ":00";
+    card.lastElementChild.textContent = weatherDegArr[i] + "°";
   }
 }
 
@@ -621,12 +588,9 @@ function debounce(fn, delay) {
 }
 
 function takeWeeks(timeArr) {
-  const currentDay = new Date().toISOString().split("T")[0];
   const finalWeeks = timeArr.map((t) => {
     const date = new Date(t);
-    const weekFormat = date.toLocaleDateString("en-US", {
-      weekday: "long",
-    });
+    const weekFormat = date.toLocaleDateString("en-US", { weekday: "long" });
     const isoDate = date.toISOString().split("T")[0];
     return [weekFormat, isoDate];
   });
@@ -635,37 +599,21 @@ function takeWeeks(timeArr) {
     .map(JSON.parse)
     .filter((_, i) => i % 2 !== 0);
 
-  const isExisting = weekList.querySelectorAll("li");
+  weekList.innerHTML = "";
 
-  if (isExisting.length === 0) {
-    dataArr.forEach(([w, d]) => {
-      const li = document.createElement("li");
-      li.textContent = w;
-      li.dataset.isoDate = d;
-      li.addEventListener("click", (e) => {
-        weekday.textContent = e.currentTarget.textContent;
-        weekdayFilter = e.currentTarget.dataset.isoDate;
-        weatherInfo(latitudine, longitudine, false, true);
-      });
-      weekList.appendChild(li);
+  dataArr.forEach(([w, d]) => {
+    const li = document.createElement("li");
+    li.textContent = w;
+    li.dataset.isoDate = d;
+    li.addEventListener("click", (e) => {
+      weekday.textContent = e.currentTarget.textContent;
+      weekdayFilter = e.currentTarget.dataset.isoDate;
+      weatherInfo(latitudine, longitudine, false, true);
     });
+    weekList.appendChild(li);
+  });
 
-    weekday.textContent = dataArr[0][0];
-  } else {
-    isExisting.forEach((n, i) => {
-      n.textContent = dataArr[i][0];
-      n.dataset.isoDate = dataArr[i][1];
-      const newElem = n.cloneNode(true);
-      n.parentNode.replaceChild(newElem, n);
-
-      newElem.addEventListener("click", (e) => {
-        weekday.textContent = e.currentTarget.textContent;
-        weekdayFilter = e.currentTarget.dataset.isoDate;
-        weatherInfo(latitudine, longitudine, false, true);
-      });
-    });
-    weekday.textContent = dataArr[0][0];
-  }
+  weekday.textContent = dataArr[0][0];
 }
 
 document.addEventListener("click", (e) => {
@@ -748,6 +696,63 @@ dropDownBtn.addEventListener("click", () => {
   dropDownList.classList.toggle("hide");
 });
 
+function setUnit(isAlreadyActive, setter, activeEl, inactiveEl) {
+  if (isAlreadyActive()) return;
+  setter();
+  activeEl.querySelector("img").classList.remove("hide");
+  inactiveEl.querySelector("img").classList.add("hide");
+  weatherInfo(latitudine, longitudine, true);
+}
+
+celFiltr.addEventListener("click", () =>
+  setUnit(
+    () => !tempSwitch,
+    () => (tempSwitch = false),
+    celFiltr,
+    fahFilter,
+  ),
+);
+fahFilter.addEventListener("click", () =>
+  setUnit(
+    () => tempSwitch,
+    () => (tempSwitch = true),
+    fahFilter,
+    celFiltr,
+  ),
+);
+wspeedkm.addEventListener("click", () =>
+  setUnit(
+    () => !windSwitch,
+    () => (windSwitch = false),
+    wspeedkm,
+    wspeedmp,
+  ),
+);
+wspeedmp.addEventListener("click", () =>
+  setUnit(
+    () => windSwitch,
+    () => (windSwitch = true),
+    wspeedmp,
+    wspeedkm,
+  ),
+);
+precimm.addEventListener("click", () =>
+  setUnit(
+    () => !preciSwitch,
+    () => (preciSwitch = false),
+    precimm,
+    preciin,
+  ),
+);
+preciin.addEventListener("click", () =>
+  setUnit(
+    () => preciSwitch,
+    () => (preciSwitch = true),
+    preciin,
+    precimm,
+  ),
+);
+
 imperialBtn.addEventListener("click", () => {
   impMetricSwitch = true;
   tempSwitch = true;
@@ -779,60 +784,6 @@ metricBtn.addEventListener("click", () => {
   precimm.querySelector("img").classList.remove("hide");
   preciin.querySelector("img").classList.add("hide");
   weatherInfo(latitudine, longitudine, true);
-});
-
-celFiltr.addEventListener("click", () => {
-  if (tempSwitch !== false) {
-    tempSwitch = !tempSwitch;
-    celFiltr.querySelector("img").classList.remove("hide");
-    fahFilter.querySelector("img").classList.add("hide");
-    weatherInfo(latitudine, longitudine, true);
-  }
-});
-
-fahFilter.addEventListener("click", () => {
-  if (tempSwitch === false) {
-    tempSwitch = !tempSwitch;
-    fahFilter.querySelector("img").classList.remove("hide");
-    celFiltr.querySelector("img").classList.add("hide");
-    weatherInfo(latitudine, longitudine, true);
-  }
-});
-
-wspeedkm.addEventListener("click", () => {
-  if (windSwitch !== false) {
-    windSwitch = !windSwitch;
-    wspeedkm.querySelector("img").classList.remove("hide");
-    wspeedmp.querySelector("img").classList.add("hide");
-    weatherInfo(latitudine, longitudine, true);
-  }
-});
-
-wspeedmp.addEventListener("click", () => {
-  if (windSwitch === false) {
-    windSwitch = !windSwitch;
-    wspeedmp.querySelector("img").classList.remove("hide");
-    wspeedkm.querySelector("img").classList.add("hide");
-    weatherInfo(latitudine, longitudine, true);
-  }
-});
-
-precimm.addEventListener("click", () => {
-  if (preciSwitch !== false) {
-    preciSwitch = !preciSwitch;
-    precimm.querySelector("img").classList.remove("hide");
-    preciin.querySelector("img").classList.add("hide");
-    weatherInfo(latitudine, longitudine, true);
-  }
-});
-
-preciin.addEventListener("click", () => {
-  if (preciSwitch === false) {
-    preciSwitch = !preciSwitch;
-    preciin.querySelector("img").classList.remove("hide");
-    precimm.querySelector("img").classList.add("hide");
-    weatherInfo(latitudine, longitudine, true);
-  }
 });
 
 weekFilterBtn.addEventListener("click", () => {
