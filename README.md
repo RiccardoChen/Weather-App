@@ -6,7 +6,7 @@ A clean, responsive weather application built with vanilla HTML, CSS and JavaScr
 
 ## 📸 Preview
 
-![Preview image](./design/desktop-design-metric.jpg)
+![Preview image](./previewImg.html.png)
 
 ---
 
