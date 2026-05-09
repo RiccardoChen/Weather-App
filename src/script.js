@@ -608,7 +608,12 @@ function takeWeeks(timeArr) {
     li.addEventListener("click", (e) => {
       weekday.textContent = e.currentTarget.textContent;
       weekdayFilter = e.currentTarget.dataset.isoDate;
-      weatherInfo(latitudine, longitudine, false, true);
+      if (weekdayFilter === dataArr[0][1]) {
+        weekdayFilter = null;
+        getLocationAndFetch();
+      } else {
+        weatherInfo(latitudine, longitudine, false, true);
+      }
     });
     weekList.appendChild(li);
   });
